@@ -24,7 +24,9 @@ class Map:
 		return False
 
 	def moveBlob(self, blob, new_pos):
-		if (0 < new_pos[0] < self.width) and (0 < new_pos[1] < self.height):
+		if blob.name == 'res':
+			pass
+		elif (0 < new_pos[0] < self.width) and (0 < new_pos[1] < self.height):
 			blob.xy = new_pos
 			return True
 		return False
