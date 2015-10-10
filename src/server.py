@@ -4,6 +4,7 @@ import jsonpickle
 import socket, time, threading
 from blob import Blob
 from map import Map
+from resource import Resource, ResourceFactory
 
 
 
@@ -53,15 +54,18 @@ class BlobberServerThread(StoppableThread):
 class BlobberServer(StoppableThread):
   def __init__(self, port=17098):
     super(BlobberServer, self).__init__()
+    #network
     self.port = port;
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     self.threadPool = []
     self.mutex = threading.Lock()
 
+    #display
     self.MU            = 100.0
     self.viewportSize  = (800, 600)
 
+    #blobs
     self.myBlob   = Blob([3.0,3.0])
     self.blobs = [];
     self.blobs.append(Blob([4.0,3.0], 0.1))
@@ -69,9 +73,14 @@ class BlobberServer(StoppableThread):
     self.blobs.append(Blob([6.0,3.0], 0.1))
     self.blobs.append(Blob([7.0,3.0], 0.1))
 
+    #map
     self.myMap = Map(100.0,100.0)
     self.myMap.addBlob(self.myBlob)
     self.myMap.addBlobs(self.blobs)
+
+    #resources
+    self.rf = ResourceFactory(self.myMap, 2000)
+    self.rf.createInitialResources()
     
   def run(self):
     self.sock.bind(("",self.port)) 
