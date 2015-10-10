@@ -1,7 +1,7 @@
 from pygame import *
 from resource import Resource, ResourceFactory
 import blob, map
-import os
+import os, time
 import traceback
 import sys
 
@@ -23,35 +23,43 @@ blobs.append(blob.Blob([4.0,3.0], 0.1))
 blobs.append(blob.Blob([5.0,3.0], 0.1))
 blobs.append(blob.Blob([6.0,3.0], 0.1))
 blobs.append(blob.Blob([7.0,3.0], 0.1))
+myMap.addBlobs(blobs)
 
-#init default resources
-rf = ResourceFactory(myMap)
-resources = []
-for i in range(1000):
-  myMap.addResource(rf.createResource())
+#init resources
+rf = ResourceFactory(myMap, 10000)
+rf.createInitialResources()
+
+#init timing
+startTime = time.time()
+endTime = time.time()
 
 try:
     done = False
     while not done:
+
         #handle events
         for e in event.get():
             if e.type == QUIT:
                done = True
 
-        #update position of myBlob
-        xy = myBlob.updatePos()
-        #print int(xy[0]*MU),int(xy[1]*MU)
-        myMap.moveBlob(myBlob, xy)
-        #draw.circle(screen, myBlob.color, (int(myBlob.xy[0]*MU), int(myBlob.xy[1]*MU)), int(myBlob.radius*MU), 0)
-
+        #get keyboard input 
         keys_pressed = key.get_pressed()
-
         if (keys_pressed[K_s] and not keys_pressed[K_w]): myBlob.accelerateY(1)
         if (keys_pressed[K_w] and not keys_pressed[K_s]): myBlob.accelerateY(-1)
         if not (keys_pressed[K_w] or keys_pressed[K_s]): myBlob.deccelY()
         if (keys_pressed[K_d] and not keys_pressed[K_a]): myBlob.accelerateX(1)
         if (keys_pressed[K_a] and not keys_pressed[K_d]): myBlob.accelerateX(-1)
         if not (keys_pressed[K_a] or keys_pressed[K_d]): myBlob.deccelX()
+
+        #update position of myBlob
+        xy = myBlob.updatePos()
+        #print int(xy[0]*MU),int(xy[1]*MU)
+        myMap.moveBlob(myBlob, xy)
+
+        #generate resources
+        if endTime - startTime > 1.0:
+          rf.createResourceInArea((0,0), (10,10), 1)
+          startTime = time.time()
 
         #draw background
         screen.fill((255,255,255))
@@ -80,7 +88,7 @@ try:
 
         
 
-        display.flip()
+        endTime = time.time()
         display.update()
 
 except Exception, err:
