@@ -1,35 +1,43 @@
 import random
-
+import math
 
 
 class Blob:
 
-	def __init__(self, xy=[400,200], radius = 20):
+	def __init__(self, xy=[40.0,20.0], radius = 2, color = (255,255,0)):
 
 		self.xy  = xy
 		self.radius = radius
-		self.xAccel = 0
-		self.yAccel = 0
+		self.xAccel = 0.0
+		self.yAccel = 0.0
+		self.color  = color
+		self.mass   = (self.radius**2)*math.pi
+
+	def sign(self,number):return cmp(number,0)
 
 	def accelerateX(self, num):
-		if -5 < self.xAccel < 5:
-			self.xAccel += num
+		if self.sign(num) != self.sign(self.xAccel):
+			self.xAccel = 0.0 + num
 		else:
-			print "Error with x accel"
+			if -1.0 < self.xAccel < 1.0:
+				self.xAccel += num
 
 	def accelerateY(self, num):
-		if -5 < self.xAccel < 5:
-			self.yAccel += num
+		if self.sign(num) != self.sign(self.yAccel):
+			self.yAccel = 0.0 + num
 		else:
-			print "Error with y accel"
+			if -1.0 < self.yAccel < 1.0:
+				self.yAccel += num
+
 
 	def deccelX(self):
-		if self.xAccel > 0: self.xAccel -= 1
-		elif self.xAccel < 0: self.xAccel += 1
+		if int(self.xAccel*10) > 0.0: self.xAccel -= 0.1
+		elif int(self.xAccel*10) < 0.0: self.xAccel += 0.1
 
 	def deccelY(self):
-		if self.yAccel > 0: self.yAccel -= 1
-		elif self.yAccel < 0: self.yAccel += 1
+		if int(self.yAccel*10) > 0.0: self.yAccel -= 0.1
+		elif int(self.yAccel*10) < 0.0: self.yAccel += 0.1
+
 
 
 	def updatePos(self):
@@ -37,3 +45,6 @@ class Blob:
 		xy[0] += self.xAccel
 		xy[1] += self.yAccel
 		return xy
+
+	def update(self):
+		self.mass = (self.radius**2)*math.pi

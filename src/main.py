@@ -11,8 +11,8 @@ init()
 
 screen   = display.set_mode((800, 600))
 myBlob   = blob.Blob()
-done = False
-
+done     = False
+MU       = 10.0
 
 try:
     while not done:
@@ -21,20 +21,20 @@ try:
                done = True
 
         keys_pressed = key.get_pressed()
-        if keys_pressed[K_s]: myBlob.accelerateY(1)
-        if keys_pressed[K_w]: myBlob.accelerateY(-1)
+        if keys_pressed[K_s]: myBlob.accelerateY(0.1)
+        if keys_pressed[K_w]: myBlob.accelerateY(-0.1)
         if not (keys_pressed[K_w] or keys_pressed[K_s]): myBlob.deccelY()
-        if keys_pressed[K_d]: myBlob.accelerateX(1)
-        if keys_pressed[K_a]: myBlob.accelerateX(-1)
+        if keys_pressed[K_d]: myBlob.accelerateX(0.1)
+        if keys_pressed[K_a]: myBlob.accelerateX(-0.1)
     	if not (keys_pressed[K_a] or keys_pressed[K_d]): myBlob.deccelX()
 
 
 
         screen.fill((255,255,255))
-        print myBlob.xAccel,myBlob.yAccel
         xy = myBlob.updatePos()
+        print int(xy[0]*MU),int(xy[1]*MU)
         myBlob.xy = xy    
-        draw.circle(screen, (126,126,126), (myBlob.xy[0], myBlob.xy[1]), myBlob.radius, 0)
+        draw.circle(screen, myBlob.color, (int(myBlob.xy[0]*MU), int(myBlob.xy[1]*MU)), int(myBlob.radius*MU), 0)
         display.flip()
         display.update()
 
