@@ -41,7 +41,7 @@ class Blob:
 
 
 	def updatePos(self):
-		xy = self.xy
+		xy = list(self.xy)
 		xy[0] += self.xAccel
 		xy[1] += self.yAccel
 		return xy
