@@ -1,4 +1,4 @@
-from random import randint
+from random import randint, uniform
 
 class Resource:
   def __init__(self, xy, radius, value):
@@ -19,8 +19,7 @@ class ResourceFactory:
 
   #initially populate the map with resources
   def createInitialResources(self):
-    for i in range(self.maxResources/2):
-      self.map.addResource(self.createResource())
+    self.createResource(self.maxResources/2)
 
   #generate a number of resources
   def generateResources(self, numResources):
@@ -29,22 +28,26 @@ class ResourceFactory:
       self.map.addResource(self.createResource())
 
   #randomly create a default resource
-  def createResource(self):
-    while True:
-      x = randint(0, int(self.map.width))
-      y = randint(0, int(self.map.width))
-      if self.map.validPosition((x,y)):
-        value = randint(int(self.minValue*100), int(self.maxValue*100))/100.0
-        return Resource((x,y), value, value)
-
-  #create a default resource in a given area
-  def createResourceInArea(self, pos, dim, n=1):
+  def createResource(self, N=1):
+    n = min(N, self.maxResources - len(self.map.resources))
     for i in range(n):
       while True:
-        x = randint(int(pos[0]), int(pos[0] + dim[0]))
-        y = randint(int(pos[1]), int(pos[1] + dim[1]))
+        x = uniform(0, self.map.width)
+        y = uniform(0, self.map.width)
         if self.map.validPosition((x,y)):
-          value = randint(int(self.minValue*100), int(self.maxValue*100))/100.0
+          value = uniform(self.minValue, self.maxValue)
+          self.map.addResource(Resource((x,y), value, value))
+          break
+
+  #create a default resource in a given area
+  def createResourceInArea(self, pos, dim, N=1):
+    n = min(N, self.maxResources - len(self.map.resources))
+    for i in range(n):
+      while True:
+        x = uniform(int(pos[0]), int(pos[0] + dim[0]))
+        y = uniform(int(pos[1]), int(pos[1] + dim[1]))
+        if self.map.validPosition((x,y)):
+          value = uniform(self.minValue, self.maxValue)
           self.map.addResource(Resource((x,y), value, value))
           break
 

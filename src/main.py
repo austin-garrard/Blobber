@@ -26,7 +26,7 @@ blobs.append(blob.Blob([7.0,3.0], 0.1))
 myMap.addBlobs(blobs)
 
 #init resources
-rf = ResourceFactory(myMap, 10000)
+rf = ResourceFactory(myMap, 2000)
 rf.createInitialResources()
 
 #init timing
@@ -58,7 +58,7 @@ try:
 
         #generate resources
         if endTime - startTime > 1.0:
-          rf.createResourceInArea((0,0), (10,10), 1)
+          rf.createResource(5)
           startTime = time.time()
 
         #draw background
