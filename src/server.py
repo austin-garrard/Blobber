@@ -33,13 +33,14 @@ class BlobberServerThread(StoppableThread):
       self.sock.close()
       return
     
+    #serialize state
+    state = [self.server.MU, self.server.viewportSize, self.server.myBlob, self.server.myMap]
+    stateSerial = jsonpickle.encode(state)
+    #send to client
+    self.sock.sendall(stateSerial)
     
     while not self.stopped():
-      #serialize state
-      state = [self.server.MU, self.server.viewportSize, self.server.myBlob, self.server.myMap]
-      stateSerial = jsonpickle.encode(state)
-      #send to client
-      self.sock.sendall(stateSerial)
+      break
       
       #read keypresses from client
       
@@ -79,7 +80,7 @@ class BlobberServer(StoppableThread):
     self.myMap.addBlobs(self.blobs)
 
     #resources
-    self.rf = ResourceFactory(self.myMap, 2000)
+    self.rf = ResourceFactory(self.myMap, 200)
     self.rf.createInitialResources()
     
   def run(self):

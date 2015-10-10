@@ -20,7 +20,7 @@ init()
 try: 
   #get server state
   sock.sendall('init')
-  bigSerial = sock.recv(2048)
+  bigSerial = sock.recv(20000)
   server_state = jsonpickle.decode(bigSerial)
   #decode server state
   MU = server_state[0]
@@ -29,6 +29,7 @@ try:
   myMap = server_state[3]
   screen        = display.set_mode((viewportSize[0], viewportSize[1]))
   blobs = myMap.blobs
+  print myMap.resources
   done = False
   while not done:
 
@@ -76,7 +77,7 @@ try:
 
 
     display.update()
-    
+
 except Exception, err:
     print(traceback.format_exc())          
 
