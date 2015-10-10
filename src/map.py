@@ -12,6 +12,8 @@ class Map:
 
 	def addBlob(self, blob):
 		self.blobs.append(blob)
+	def addBlobs(self, blobs):
+		self.blobs.extend(blobs)
 
 	def moveBlob(self, blob, new_pos):
 		if (0 < new_pos[0] < self.width) and (0 < new_pos[1] < self.height):
