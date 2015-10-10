@@ -19,10 +19,10 @@ myBlob   = blob.Blob([3.0,3.0])
 myMap.addBlob(myBlob)
 #init other blobs
 blobs = [];
-blobs.append(blob.Blob([4.0,3.0], 0.1))
-blobs.append(blob.Blob([5.0,3.0], 0.1))
-blobs.append(blob.Blob([6.0,3.0], 0.1))
-blobs.append(blob.Blob([7.0,3.0], 0.1))
+blobs.append(blob.Blob([4.0,3.0], 0.3))
+blobs.append(blob.Blob([5.0,3.0], 0.3))
+blobs.append(blob.Blob([6.0,3.0], 0.3))
+blobs.append(blob.Blob([7.0,3.0], 0.3))
 
 #init default resources
 rf = ResourceFactory(myMap)
@@ -43,7 +43,8 @@ try:
         #print int(xy[0]*MU),int(xy[1]*MU)
         myMap.moveBlob(myBlob, xy)
         #draw.circle(screen, myBlob.color, (int(myBlob.xy[0]*MU), int(myBlob.xy[1]*MU)), int(myBlob.radius*MU), 0)
-
+        checkBlobs = []
+        #empty list that is filled with blobs in our view to check hitboxes.
         keys_pressed = key.get_pressed()
 
         if (keys_pressed[K_s] and not keys_pressed[K_w]): myBlob.accelerateY(1)
@@ -73,10 +74,21 @@ try:
         for blob in blobs:
           if (vpXmin < int(blob.xy[0]*MU) < vpXmax) and (vpYmin < int(blob.xy[1]*MU) < vpYmax):
             draw.circle(screen, (126,126,126), (int(blob.xy[0]*MU)-vpXmin, int(blob.xy[1]*MU)-vpYmin), int(blob.radius*MU), 0)
+            checkBlobs.append(blob)
         
         #draw resources
         for r in myMap.resources:
-          draw.circle(screen, (0,255,0), (int(r.xy[0]*MU)-vpXmin, int(r.xy[1]*MU)-vpYmin), int(r.radius*MU), 0)
+          if (vpXmin < int(r.xy[0]*MU) < vpXmax) and (vpYmin < int(r.xy[1]*MU) < vpYmax):
+            draw.circle(screen, (0,255,0), (int(r.xy[0]*MU)-vpXmin, int(r.xy[1]*MU)-vpYmin), int(r.radius*MU), 0)
+            checkBlobs.append(r)
+
+        for check in checkBlobs:
+          if myBlob.canEat(check):
+            myBlob.eat(check)
+            if check in blobs:
+              blobs.remove(check)
+            else:
+              myMap.resources.remove(check)
 
         
 

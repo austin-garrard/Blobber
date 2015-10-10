@@ -11,7 +11,6 @@ class Blob:
 		self.xAccel   = 0.0
 		self.yAccel   = 0.0
 		self.color    = color
-		self.mass     = (self.radius**2)*math.pi
 		self.aRate    = .001
 		self.maxAccel = .1551
 
@@ -52,3 +51,21 @@ class Blob:
 
 	def update(self):
 		self.mass = (self.radius**2)*math.pi
+
+	def getDistBetween(self, blob):
+		return math.sqrt((self.xy[0] - blob.xy[0])**2 + (self.xy[1] - blob.xy[1])**2)
+
+	def canEat(self, blob):
+		if self.radius*(0.9) > blob.radius:
+			ratio    = (1-(blob.radius**2)/(self.radius**2))
+			dist     = self.getDistBetween(blob)
+			if dist < ratio*self.radius:
+				return True
+			else:
+				return False
+		return False
+
+	def eat(self, blob):
+		self.radius = math.sqrt(self.radius**2 + blob.radius**2)
+
+			
