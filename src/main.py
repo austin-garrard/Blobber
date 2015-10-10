@@ -13,10 +13,10 @@ done          = False
 
 myBlob   = blob.Blob([3.0,3.0])
 blobs = [];
-blobs.append(blob.Blob([1.0,1.0]))
-blobs.append(blob.Blob([5.0,5.0]))
-blobs.append(blob.Blob([7.0,5.0]))
-blobs.append(blob.Blob([7.0,7.0]))
+blobs.append(blob.Blob([4.0,3.0], 0.1))
+blobs.append(blob.Blob([5.0,3.0], 0.1))
+blobs.append(blob.Blob([6.0,3.0], 0.1))
+blobs.append(blob.Blob([7.0,3.0], 0.1))
 
 myMap = map.Map(10000,10000)
 myMap.addBlob(myBlob)
@@ -37,11 +37,12 @@ try:
         #draw.circle(screen, myBlob.color, (int(myBlob.xy[0]*MU), int(myBlob.xy[1]*MU)), int(myBlob.radius*MU), 0)
 
         keys_pressed = key.get_pressed()
-        if keys_pressed[K_s]: myBlob.accelerateY(.001)
-        if keys_pressed[K_w]: myBlob.accelerateY(-.001)
+
+        if (keys_pressed[K_s] and not keys_pressed[K_w]): myBlob.accelerateY(1)
+        if (keys_pressed[K_w] and not keys_pressed[K_s]): myBlob.accelerateY(-1)
         if not (keys_pressed[K_w] or keys_pressed[K_s]): myBlob.deccelY()
-        if keys_pressed[K_d]: myBlob.accelerateX(.001)
-        if keys_pressed[K_a]: myBlob.accelerateX(-.001)
+        if (keys_pressed[K_d] and not keys_pressed[K_a]): myBlob.accelerateX(1)
+        if (keys_pressed[K_a] and not keys_pressed[K_d]): myBlob.accelerateX(-1)
         if not (keys_pressed[K_a] or keys_pressed[K_d]): myBlob.deccelX()
 
         #draw background
@@ -54,7 +55,6 @@ try:
         vpXmax = currentX + viewportSize[0]/2
         vpYmin = currentY - viewportSize[1]/2
         vpYmax = currentY + viewportSize[1]/2
-        print vpXmin,vpXmax,vpYmin,vpYmax
 
         #draw myBlob at the center of the viewport
         draw.circle(screen, (255,0,0), (viewportSize[0]/2, viewportSize[1]/2), int(myBlob.radius*MU), 0)
