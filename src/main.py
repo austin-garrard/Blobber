@@ -44,13 +44,17 @@ try:
      #    if keys_pressed[K_a]: myBlob.accelerateX(-1)
     	# if not (keys_pressed[K_a] or keys_pressed[K_d]): myBlob.deccelX()
 
+        #draw background
         screen.fill((255,255,255))
+
+        #calculate viewport
         currentX = myBlob.xy[0]
         currentY = myBlob.xy[1]
         vpXmin = currentX - viewportSize[0]/2
         vpXmax = currentX + viewportSize[0]/2
         vpYmin = currentY - viewportSize[1]/2
         vpYmax = currentY + viewportSize[1]/2
+
         #draw myBlob at the center of the viewport
         draw.circle(screen, (255,0,0), (viewportSize[0]/2, viewportSize[1]/2), myBlob.radius, 0)
 
@@ -60,7 +64,7 @@ try:
             draw.circle(screen, (126,126,126), (blob.xy[0]-vpXmin, blob.xy[1]-vpYmin), blob.radius, 0)
         
 
-        display.flip()
+        #display.flip()
         display.update()
 
 except Exception, err:
