@@ -26,15 +26,6 @@ try:
         for e in event.get():
             if e.type == QUIT:
                done = True
-            if e.type == KEYDOWN:
-              if e.key == K_w:
-                myBlob.xy[1] -= 10
-              if e.key == K_s:
-                myBlob.xy[1] += 10
-              if e.key == K_d:
-                myBlob.xy[0] += 10
-              if e.key == K_a:
-                myBlob.xy[0] -= 10
 
      #    keys_pressed = key.get_pressed()
      #    if keys_pressed[K_s]: myBlob.accelerateY(1)
@@ -64,7 +55,7 @@ try:
             draw.circle(screen, (126,126,126), (blob.xy[0]-vpXmin, blob.xy[1]-vpYmin), blob.radius, 0)
         
 
-        #display.flip()
+        display.flip()
         display.update()
 
 except Exception, err:
