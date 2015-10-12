@@ -2,10 +2,11 @@ import random
 import math
 
 
-class Blob:
+class Blob(object):
 
 	def __init__(self, xy=[40.0,20.0], radius = .2, color = (255,255,0)):
 
+		self.id 			= -1 # assigned when added to map
 		self.xy       = xy
 		self.radius   = radius
 		self.xAccel   = 0.0
