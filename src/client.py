@@ -16,20 +16,48 @@ sock.connect((host, port))
 #init
 init()
 
+MU = None
+viewportSize = None
+blobs = []
+
 
 try: 
   #get server state
-  sock.sendall('init')
-  bigSerial = sock.recv(20000)
-  server_state = jsonpickle.decode(bigSerial)
-  #decode server state
-  MU = server_state[0]
-  viewportSize = server_state[1]
-  myBlob = server_state[2]
-  myMap = server_state[3]
+  sock.send('init')
+  
+  initdone = False
+  while not initdone:
+
+    data = ''
+    nextByte = ''
+    while nextByte != ' ':
+      nextByte = sock.recv(1)
+      data += nextByte
+    messageSize = int(data)
+    message = sock.recv(messageSize)
+
+    if message == "initdone":
+      break
+
+    obj = jsonpickle.decode(message)
+
+    if obj[0] == "MU":
+      MU = obj[1]
+
+    elif obj[0] == "viewportSize":
+      viewportSize = obj[1]
+
+    elif obj[0] == "newBlob":
+      blobs.append(obj[1])
+
+    elif obj[0] == "initdone":
+      break
+
+
+
+
   screen        = display.set_mode((viewportSize[0], viewportSize[1]))
-  blobs = myMap.blobs
-  print myMap.resources
+  myBlob = blobs[0]
   done = False
   while not done:
 
@@ -67,13 +95,8 @@ try:
     #draw all the blobs at their respective positions
     for blob in blobs:
       if (vpXmin < int(blob.xy[0]*MU) < vpXmax) and (vpYmin < int(blob.xy[1]*MU) < vpYmax):
-        draw.circle(screen, (126,126,126), (int(blob.xy[0]*MU)-vpXmin, int(blob.xy[1]*MU)-vpYmin), int(blob.radius*MU), 0)
+        draw.circle(screen, blob.color, (int(blob.xy[0]*MU)-vpXmin, int(blob.xy[1]*MU)-vpYmin), int(blob.radius*MU), 0)
       
-    
-    #draw resources
-    for r in myMap.resources:
-      if (vpXmin < int(r.xy[0]*MU) < vpXmax) and (vpYmin < int(r.xy[1]*MU) < vpYmax):
-        draw.circle(screen, (0,255,0), (int(r.xy[0]*MU)-vpXmin, int(r.xy[1]*MU)-vpYmin), int(r.radius*MU), 0)
 
 
     display.update()

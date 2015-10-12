@@ -5,26 +5,18 @@ import socket, time, threading
 from blob import Blob
 from map import Map
 from resource import Resource, ResourceFactory
-
-
-
-class StoppableThread(threading.Thread):
-    def __init__(self):
-        super(StoppableThread, self).__init__()
-        self._stop = threading.Event()
-    def stop(self):
-        self._stop.set()
-    def stopped(self):
-        return self._stop.isSet()
+from util import StoppableThread, BBuffer
 
 
 
 class BlobberServerThread(StoppableThread):
-  def __init__(self, sock, lock, server):
+  def __init__(self, sock, clientAddr, lock, server):
     super(BlobberServerThread, self).__init__()
     self.sock = sock
+    self.clientAddr = clientAddr
     self.lock = lock
     self.server = server
+    self.buffer = BBuffer(100)
 
   def run(self):
     #init
@@ -34,10 +26,27 @@ class BlobberServerThread(StoppableThread):
       return
     
     #serialize state
-    state = [self.server.MU, self.server.viewportSize, self.server.myBlob, self.server.myMap]
-    stateSerial = jsonpickle.encode(state)
+    MU = ("MU", server.MU)
+    stateSerial = jsonpickle.encode(MU)
+    stateSerial = str(len(stateSerial)) + " " + stateSerial
+    self.sock.send(stateSerial)
+
+    viewportSize = ("viewportSize", server.viewportSize)
+    stateSerial = jsonpickle.encode(viewportSize)
+    stateSerial = str(len(stateSerial)) + " " + stateSerial
+    self.sock.send(stateSerial)
+
+    blobs = ("blobs", server.myMap.blobs)
+    for blob in server.myMap.blobs : 
+      b = ("newBlob", blob)
+      stateSerial = jsonpickle.encode(b)
+      stateSerial = str(len(stateSerial)) + " " + stateSerial
+      self.sock.send(stateSerial)
+
+
     #send to client
-    self.sock.sendall(stateSerial)
+    initdone = "initdone"
+    self.sock.send(str(len(initdone)) + " " + initdone)
     
     while not self.stopped():
       break
@@ -66,52 +75,47 @@ class BlobberServer(StoppableThread):
     self.MU            = 100.0
     self.viewportSize  = (800, 600)
 
-    #blobs
-    self.myBlob   = Blob([3.0,3.0])
-    self.blobs = [];
-    self.blobs.append(Blob([4.0,3.0], 0.1))
-    self.blobs.append(Blob([5.0,3.0], 0.1))
-    self.blobs.append(Blob([6.0,3.0], 0.1))
-    self.blobs.append(Blob([7.0,3.0], 0.1))
-
     #map
     self.myMap = Map(100.0,100.0)
-    self.myMap.addBlob(self.myBlob)
-    self.myMap.addBlobs(self.blobs)
+
+    #blobs
+    self.myMap.addPlayer(Blob([3.0,3.0], .2, (255,0,0))) #myBlob
+    self.myMap.addPlayer(Blob([4.0,3.0], 0.1, (0,0,255)))
+    self.myMap.addPlayer(Blob([5.0,3.0], 0.1, (0,0,255)))
+    self.myMap.addPlayer(Blob([6.0,3.0], 0.1, (0,0,255)))
+    self.myMap.addPlayer(Blob([7.0,3.0], 0.1, (0,0,255)))
 
     #resources
-    self.rf = ResourceFactory(self.myMap, 200)
+    self.rf = ResourceFactory(self.myMap, 2000)
     self.rf.createInitialResources()
     
   def run(self):
     self.sock.bind(("",self.port)) 
-    self.sock.settimeout(5)
+    self.sock.settimeout(2)
     while not self.stopped():
       try:
-        self.sock.listen(1) 
-        sock = self.sock.accept()[0]
+        self.sock.listen(5) 
+        sock, addr = self.sock.accept()
         print sock
-        th = BlobberServerThread(sock, self.mutex, self)
+        th = BlobberServerThread(sock, addr, self.mutex, self)
         self.threadPool.append(th)
         th.start()
       except socket.error, v:
-        print v[0]
-        time.sleep(1)
-        break
+        pass
+        
 
 
     for th in self.threadPool:
       th.stop()
       th.join()
     self.sock.close()
-
-
-
+  
 
 server = BlobberServer(17098)
 try:
   server.start()
-  server.join()
+  while True:
+    time.sleep(.2)
 except:
   server.stop()
   server.join()
