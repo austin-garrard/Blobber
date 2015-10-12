@@ -9,14 +9,26 @@ class Map:
 		self.width  = width
 		self.height = height
 		self.blobs  = []
-		self.resources = []
+		self.numPlayers = 0
+		self.numResources = 0
+		self.currentId = 1
 
 	def addBlob(self, blob):
+		blob.id = self.currentId;
+		self.currentId += 1
 		self.blobs.append(blob)
-	def addBlobs(self, blobs):
-		self.blobs.extend(blobs)
+
+	def addPlayer(self, player):
+		player.id = self.currentId
+		self.currentId += 1
+		self.blobs.append(player)
+		self.numPlayers += 1
+
 	def addResource(self, resource):
-		self.resources.append(resource)
+		resource.id = self.currentId
+		self.currentId += 1
+		self.blobs.append(resource)
+		self.numResources += 1
 
 	def validPosition(self, pos):
 		if (0 < pos[0] < self.width) and (0 < pos[1] < self.height):
