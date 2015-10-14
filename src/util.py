@@ -1,6 +1,30 @@
 import threading
 from collections import deque
 
+class SocketWrapper:
+  def __init__(self, sock):
+    self.sock = sock 
+
+  #serialize the given key, data pair and send it 
+  def sendData(self, key, data):
+    serialPair = jsonpickle.encode((key, data))
+    message = str(len(serialPair)) + " " + serialPair
+    self.sock.send(message)
+
+  #send the given message
+  def sendMessage(self, message):
+    self.sock.send(str(len(message)) + " " + message)
+
+  def recvMessage(self):
+    data = ''
+    nextByte = ''
+    while nextByte != ' ':
+      nextByte = self.sock.recv(1)
+      data += nextByte
+    messageSize = int(data)
+    message = self.sock.recv(messageSize)
+    return message
+
 class StoppableThread(threading.Thread):
     def __init__(self):
         super(StoppableThread, self).__init__()
