@@ -20,10 +20,10 @@ myMap.addBlob(myBlob)
 #init other blobs
 blobs = [];
 
-blobs.append(blob.Blob([4.0,3.0], 0.1))
-blobs.append(blob.Blob([5.0,3.0], 0.1))
-blobs.append(blob.Blob([6.0,3.0], 0.1))
-blobs.append(blob.Blob([7.0,3.0], 0.1))
+blobs.append(blob.Blob([4.0,3.0], 0.1, (0,0,255)))
+blobs.append(blob.Blob([5.0,3.0], 0.1, (0,0,255)))
+blobs.append(blob.Blob([6.0,3.0], 0.1, (0,0,255)))
+blobs.append(blob.Blob([7.0,3.0], 0.1, (0,0,255)))
 myMap.addBlobs(blobs)
 
 #init resources
@@ -86,24 +86,23 @@ try:
         draw.circle(screen, (255,0,0), (viewportSize[0]/2, viewportSize[1]/2), int(myBlob.radius*MU), 0)
 
         #draw all the blobs at their respective positions
-        for blob in blobs:
+        for blob in myMap.blobs:
           if (vpXmin < int(blob.xy[0]*MU) < vpXmax) and (vpYmin < int(blob.xy[1]*MU) < vpYmax):
-            draw.circle(screen, (126,126,126), (int(blob.xy[0]*MU)-vpXmin, int(blob.xy[1]*MU)-vpYmin), int(blob.radius*MU), 0)
+            draw.circle(screen, blob.color, (int(blob.xy[0]*MU)-vpXmin, int(blob.xy[1]*MU)-vpYmin), int(blob.radius*MU), 0)
             checkBlobs.append(blob)
         
-        #draw resources
-        for r in myMap.resources:
-          if (vpXmin < int(r.xy[0]*MU) < vpXmax) and (vpYmin < int(r.xy[1]*MU) < vpYmax):
-            draw.circle(screen, (0,255,0), (int(r.xy[0]*MU)-vpXmin, int(r.xy[1]*MU)-vpYmin), int(r.radius*MU), 0)
-            checkBlobs.append(r)
+        # #draw resources
+        # for r in myMap.resources:
+        #   if (vpXmin < int(r.xy[0]*MU) < vpXmax) and (vpYmin < int(r.xy[1]*MU) < vpYmax):
+        #     draw.circle(screen, (0,255,0), (int(r.xy[0]*MU)-vpXmin, int(r.xy[1]*MU)-vpYmin), int(r.radius*MU), 0)
+        #     checkBlobs.append(r)
 
         for check in checkBlobs:
           if myBlob.canEat(check):
             myBlob.eat(check)
-            if check in blobs:
-              blobs.remove(check)
-            else:
-              myMap.resources.remove(check)
+            myMap.blobs.remove(check)
+            if isinstance(check, Resource):
+                myMap.numResources -= 1
 
         
 
