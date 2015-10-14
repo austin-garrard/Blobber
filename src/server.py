@@ -5,28 +5,20 @@ import socket, time, threading
 from blob import Blob
 from map import Map
 from resource import Resource, ResourceFactory
-from util import StoppableThread, BBuffer
+from util import StoppableThread, BBuffer, SocketWrapper
 
 
 
 class BlobberServerThread(StoppableThread):
   def __init__(self, sock, clientAddr, lock, server):
     super(BlobberServerThread, self).__init__()
-    self.sock = sock
+    self.sock = SocketWrapper(sock)
     self.clientAddr = clientAddr
     self.lock = lock
     self.server = server
-    self.buffer = BBuffer(100)
+    self.updateQueue = BBuffer(100)
 
-  #serialize the given key, data pair and send it 
-  def sendData(self, key, data):
-    serialPair = jsonpickle.encode((key, data))
-    message = str(len(serialPair)) + " " + serialPair
-    self.sock.send(message)
-
-  #send the given message
-  def sendMessage(self, message):
-    self.sock.send(str(len(message)) + " " + message)
+  
 
   def run(self):
     #init
@@ -68,6 +60,10 @@ class BlobberServer(StoppableThread):
     self.port = port;
     self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM) 
     self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
+    self.sock.bind(("",self.port)) 
+    self.sock.settimeout(2)
+
+    #sync
     self.threadPool = []
     self.mutex = threading.Lock()
 
@@ -89,21 +85,22 @@ class BlobberServer(StoppableThread):
     self.rf = ResourceFactory(self.myMap, 2000)
     self.rf.createInitialResources()
     
+  #listen for new connections, spawn threads to handle them 
   def run(self):
-    self.sock.bind(("",self.port)) 
-    self.sock.settimeout(2)
     while not self.stopped():
       try:
         self.sock.listen(5) 
         sock, addr = self.sock.accept()
+
         th = BlobberServerThread(sock, addr, self.mutex, self)
         self.threadPool.append(th)
         th.start()
+
+      #for now, ignore errors
       except socket.error, v:
         pass
-        
 
-
+    #cleanup
     for th in self.threadPool:
       th.stop()
       th.join()
@@ -119,11 +116,3 @@ except:
   server.stop()
   server.join()
   
-
-# Tcp_server_wait ( 5, 17098 )
-# Tcp_server_next()
-# print Tcp_Read()
-# Tcp_Write('hi')
-# print Tcp_Read()
-# Tcp_Write('hi')
-# Tcp_Close()

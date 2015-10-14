@@ -7,6 +7,18 @@ import traceback
 import sys
 
 
+#serialize the given key, data pair and send it 
+def sendData(self, key, data):
+  serialPair = jsonpickle.encode((key, data))
+  message = str(len(serialPair)) + " " + serialPair
+  self.sock.send(message)
+
+#send the given message
+def sendMessage(self, message):
+  self.sock.send(str(len(message)) + " " + message)
+
+def recvMessage
+
 
 host = 'localhost'
 port = 17098
@@ -23,7 +35,7 @@ blobs = []
 
 try: 
   #get server state
-  sock.send('init')
+  sendMessage('init')
   
   initdone = False
   while not initdone:
