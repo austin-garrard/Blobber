@@ -18,6 +18,16 @@ class BlobberServerThread(StoppableThread):
     self.server = server
     self.buffer = BBuffer(100)
 
+  #serialize the given key, data pair and send it 
+  def sendData(self, key, data):
+    serialPair = jsonpickle.encode((key, data))
+    message = str(len(serialPair)) + " " + serialPair
+    self.sock.send(message)
+
+  #send the given message
+  def sendMessage(self, message):
+    self.sock.send(str(len(message)) + " " + message)
+
   def run(self):
     #init
     data = self.sock.recv(4)
@@ -26,27 +36,17 @@ class BlobberServerThread(StoppableThread):
       return
     
     #serialize state
-    MU = ("MU", server.MU)
-    stateSerial = jsonpickle.encode(MU)
-    stateSerial = str(len(stateSerial)) + " " + stateSerial
-    self.sock.send(stateSerial)
+    self.sendData("MU", server.MU)
 
-    viewportSize = ("viewportSize", server.viewportSize)
-    stateSerial = jsonpickle.encode(viewportSize)
-    stateSerial = str(len(stateSerial)) + " " + stateSerial
-    self.sock.send(stateSerial)
+    self.sendData("viewportSize", server.viewportSize)
 
     blobs = ("blobs", server.myMap.blobs)
     for blob in server.myMap.blobs : 
-      b = ("newBlob", blob)
-      stateSerial = jsonpickle.encode(b)
-      stateSerial = str(len(stateSerial)) + " " + stateSerial
-      self.sock.send(stateSerial)
+      self.sendData("newBlob", blob)
 
 
     #send to client
-    initdone = "initdone"
-    self.sock.send(str(len(initdone)) + " " + initdone)
+    self.sendMessage("initdone")
     
     while not self.stopped():
       break
@@ -96,7 +96,6 @@ class BlobberServer(StoppableThread):
       try:
         self.sock.listen(5) 
         sock, addr = self.sock.accept()
-        print sock
         th = BlobberServerThread(sock, addr, self.mutex, self)
         self.threadPool.append(th)
         th.start()
@@ -115,7 +114,7 @@ server = BlobberServer(17098)
 try:
   server.start()
   while True:
-    time.sleep(.2)
+    pass
 except:
   server.stop()
   server.join()

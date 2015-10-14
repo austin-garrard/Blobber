@@ -61,6 +61,7 @@ try:
   done = False
   while not done:
 
+    #get server updates
     
 
     #handle events
