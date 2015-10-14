@@ -1,9 +1,11 @@
 import threading
 from collections import deque
+import jsonpickle
 
 class SocketWrapper:
   def __init__(self, sock):
     self.sock = sock 
+    self.sock.setblocking(1)
 
   #serialize the given key, data pair and send it 
   def sendData(self, key, data):
@@ -24,6 +26,9 @@ class SocketWrapper:
     messageSize = int(data)
     message = self.sock.recv(messageSize)
     return message
+
+  def close(self):
+    self.sock.close()
 
 class StoppableThread(threading.Thread):
     def __init__(self):

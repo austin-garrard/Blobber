@@ -21,25 +21,23 @@ class BlobberServerThread(StoppableThread):
   
 
   def run(self):
-    #init
-    data = self.sock.recv(4)
-    if not data == "init":
+    #begin init phase
+    msg = self.sock.recvMessage()
+    if not msg == "init":
       self.sock.close()
       return
     
-    #serialize state
-    self.sendData("MU", server.MU)
-
-    self.sendData("viewportSize", server.viewportSize)
-
+    #send initial state
+    self.sock.sendData("MU", server.MU)
+    self.sock.sendData("viewportSize", server.viewportSize)
     blobs = ("blobs", server.myMap.blobs)
     for blob in server.myMap.blobs : 
-      self.sendData("newBlob", blob)
+      self.sock.sendData("newBlob", blob)
 
-
-    #send to client
-    self.sendMessage("initdone")
+    #end init phase
+    self.sock.sendMessage("initdone")
     
+    #main loop
     while not self.stopped():
       break
       
@@ -48,6 +46,8 @@ class BlobberServerThread(StoppableThread):
       #update server state
       
       #send response
+    
+
     self.sock.close()
     print "server thread stopping"
 
