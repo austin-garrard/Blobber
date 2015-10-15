@@ -107,12 +107,13 @@ class BlobberServer(StoppableThread):
     self.sock.close()
   
 
-server = BlobberServer(17098)
-try:
-  server.start()
-  while True:
-    pass
-except:
-  server.stop()
-  server.join()
+if __name__ == '__main__':
+  server = BlobberServer(17098)
+  try:
+    server.start()
+    while True:
+      pass
+  except:
+    server.stop()
+    server.join()
   
