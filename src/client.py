@@ -1,4 +1,4 @@
-import socket, time, sys, traceback
+import socket, time, sys, traceback, select
 import pygame, jsonpickle
 from blob import Blob
 from resource import Resource 
@@ -6,7 +6,7 @@ from util import SocketWrapper
 
 
 class BlobberClient:
-  def __init__(self, serverAddr='localhost', port=17098):
+  def __init__(self, serverAddr="localhost", port=17098):
     #network
     self.serverAddr = serverAddr
     self.port = port
@@ -17,7 +17,8 @@ class BlobberClient:
       self.sock = SocketWrapper(sock)
     except socket.error, e:
       print "Error connecting."
-      self.sock.close()
+      print e
+      #self.sock.close()
       self.connected = False
       return
 
@@ -27,8 +28,9 @@ class BlobberClient:
     self.blobs = []
 
     #init phase
+    self.sock.sock.setblocking(1)
     try: 
-      self.sock.sendMessage('init')
+      self.sock.sendMessage("init")
       
       initdone = False
       while not initdone:
@@ -58,8 +60,11 @@ class BlobberClient:
       self.sock.close()
       self.connected = False
       return
+    self.sock.sock.setblocking(0)
 
     self.myBlob = self.blobs[0]
+    print self.myBlob.xy
+    self.sock.sock.setblocking(0)
 
     #pygame
     pygame.init()
@@ -68,24 +73,24 @@ class BlobberClient:
   def run(self):
     done = False
     while not done:
-
-      #get server updates
-      
-
       #handle events
       for e in pygame.event.get():
           if e.type == pygame.QUIT:
              done = True
 
       #get client state 
-      client_state = [] 
-      keys_pressed = pygame.key.get_pressed()
-      if (keys_pressed[pygame.K_s] and not keys_pressed[pygame.K_w]): client_state.append('K_s')
-      if (keys_pressed[pygame.K_w] and not keys_pressed[pygame.K_s]): client_state.append('K_w')
-      if not (keys_pressed[pygame.K_w] or keys_pressed[pygame.K_s]): pass
-      if (keys_pressed[pygame.K_d] and not keys_pressed[pygame.K_a]): client_state.append('K_d')
-      if (keys_pressed[pygame.K_a] and not keys_pressed[pygame.K_d]): client_state.append('K_a')
-      if not (keys_pressed[pygame.K_a] or keys_pressed[pygame.K_d]): pass
+      clientState = [] 
+      keysPressed = pygame.key.get_pressed()
+      if     (keysPressed[pygame.K_s] and not keysPressed[pygame.K_w]): clientState.append('K_s')
+      if     (keysPressed[pygame.K_w] and not keysPressed[pygame.K_s]): clientState.append('K_w')
+      if not (keysPressed[pygame.K_w] or      keysPressed[pygame.K_s]): pass
+      if     (keysPressed[pygame.K_d] and not keysPressed[pygame.K_a]): clientState.append('K_d')
+      if     (keysPressed[pygame.K_a] and not keysPressed[pygame.K_d]): clientState.append('K_a')
+      if not (keysPressed[pygame.K_a] or      keysPressed[pygame.K_d]): pass
+
+      #send client state
+      self.sock.sendData("clientState", clientState)
+
 
       #calculate viewport
       currentX = int(self.myBlob.xy[0]*self.MU)
@@ -105,11 +110,31 @@ class BlobberClient:
       for blob in self.blobs:
         if (vpXmin < int(blob.xy[0]*self.MU) < vpXmax) and (vpYmin < int(blob.xy[1]*self.MU) < vpYmax):
           pygame.draw.circle(self.screen, blob.color, (int(blob.xy[0]*self.MU)-vpXmin, int(blob.xy[1]*self.MU)-vpYmin), int(blob.radius*self.MU), 0)
-        
-
 
       pygame.display.update()
 
+      #get server updates
+      readReady, writeRead, exception = select.select([self.sock.sock], [], [], 1)
+      if len(readReady) == 0:
+        continue
+
+      msg = self.sock.recvMessage()
+      if not msg:
+        continue
+
+      if msg == "done":
+        done = True
+        break
+
+      obj = jsonpickle.decode(msg)
+
+      if obj[0] == "newBlobs":
+        self.blobs.extend(obj[1])
+
+      if obj[0] == "updatedBlobs":
+        self.myBlob = obj[1][0]
+
+    self.sock.sendMessage("disconnect")
     self.sock.close()
     self.connected = False
 

@@ -1,7 +1,7 @@
 
 
 import jsonpickle
-import socket, time, threading
+import socket, time, threading, select
 from blob import Blob
 from map import Map
 from resource import Resource, ResourceFactory
@@ -10,14 +10,14 @@ from util import StoppableThread, BBuffer, SocketWrapper
 
 
 class BlobberServerThread(StoppableThread):
-  def __init__(self, sock, clientAddr, lock, server):
+  def __init__(self, sock, clientAddr, lock, server, timeout=1):
     super(BlobberServerThread, self).__init__()
     self.sock = SocketWrapper(sock)
     self.clientAddr = clientAddr
     self.lock = lock
     self.server = server
     self.updateQueue = BBuffer(100)
-
+    self.timeout = 1
   
 
   def run(self):
@@ -27,26 +27,86 @@ class BlobberServerThread(StoppableThread):
       self.sock.close()
       return
     
-    #send initial state
+    #init client
     self.sock.sendData("MU", server.MU)
     self.sock.sendData("viewportSize", server.viewportSize)
     blobs = ("blobs", server.myMap.blobs)
     for blob in server.myMap.blobs : 
       self.sock.sendData("newBlob", blob)
+    self.myBlob = server.myMap.blobs[0]
 
-    #end init phase
+    #end client init
     self.sock.sendMessage("initdone")
+
+    
+
+    #init timing
+    startTime = time.time()
+    endTime = time.time()
     
     #main loop
     while not self.stopped():
-      break
+      newBlobs = []
+      updatedBlobs = []
+
+      readReady, writeReady, exception = select.select([self.sock.sock], [], [], self.timeout)
       
-      #read keypresses from client
+      if len(readReady) == 0:
+        continue
+
+      #read client message
+      msg = self.sock.recvMessage()
+      if not msg:
+        continue
+      if msg == "disconnect":
+        break
       
-      #update server state
+      clientState = jsonpickle.decode(msg)[1]
+      #init key state
+      K_s = False
+      K_w = False
+      K_d = False
+      K_a = False
+      for key in clientState:
+        if key == "K_s":
+          K_s = True
+        if key == "K_w":
+          K_w = True
+        if key == "K_d":
+          K_d = True
+        if key == "K_a":
+          K_a = True
       
-      #send response
-    
+      #act on key presses
+      if K_s and not K_w:
+        self.myBlob.accelerateY(1)
+      if K_w and not K_s:
+        self.myBlob.accelerateY(-1)
+      if not (K_s or K_w):
+        self.myBlob.deccelY()
+      
+      if K_d and not K_a:
+        self.myBlob.accelerateX(1)
+      if K_a and not K_d:
+        self.myBlob.accelerateX(-1)
+      if not (K_a or K_d):
+        self.myBlob.deccelX()
+
+      xy = self.myBlob.updatePos()
+      self.server.myMap.moveBlob(self.myBlob, xy)
+      updatedBlobs.append(self.myBlob)
+
+      #generate resources
+      if endTime - startTime > 1.0:
+        created = self.server.rf.createResource(5)
+        updatedBlobs.extend(created)
+        startTime = time.time()
+      
+      #send update
+      if len(newBlobs) > 0:
+        self.sock.sendData("newBlobs", newBlobs)
+      if len(updatedBlobs) > 0:
+        self.sock.sendData("updatedBlobs", updatedBlobs)
 
     self.sock.close()
     print "server thread stopping"
@@ -62,6 +122,9 @@ class BlobberServer(StoppableThread):
     self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
     self.sock.bind(("",self.port)) 
     self.sock.settimeout(2)
+    #self.sock.setblocking(1)
+    
+    #self.timeout = 1
 
     #sync
     self.threadPool = []
@@ -89,6 +152,9 @@ class BlobberServer(StoppableThread):
   def run(self):
     while not self.stopped():
       try:
+        # readReady, writeReady, exception = select.select([self.sock], [], [], self.timeout)
+        # if len(readReady) < 0:
+        #   continue
         self.sock.listen(5) 
         sock, addr = self.sock.accept()
 

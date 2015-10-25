@@ -21,25 +21,16 @@ class ResourceFactory:
   #randomly create a default resource
   def createResource(self, N=1):
     n = min(N, self.maxResources - self.map.numResources)
+    newBlobs = []
     for i in range(n):
       while True:
         x = uniform(0, self.map.width)
         y = uniform(0, self.map.width)
         if self.map.validPosition((x,y)):
           value = uniform(self.minValue, self.maxValue)
-          self.map.addResource( Resource(
-                                value, [x,y], value, (0,255,0)
-                              ) )
+          r = Resource(value, [x,y], value, (0,255,0))
+          newBlobs.append(r)
+          self.map.addResource(r)
           break
+    return newBlobs
 
-  #create a default resource in a given area
-  # def createResourceInArea(self, pos, dim, N=1):
-  #   n = min(N, self.maxResources - len(self.map.resources))
-  #   for i in range(n):
-  #     while True:
-  #       x = uniform(int(pos[0]), int(pos[0] + dim[0]))
-  #       y = uniform(int(pos[1]), int(pos[1] + dim[1]))
-  #       if self.map.validPosition((x,y)):
-  #         value = uniform(self.minValue, self.maxValue)
-  #         self.map.addResource(Resource((x,y), value, value))
-  #         break

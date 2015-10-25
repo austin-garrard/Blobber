@@ -5,7 +5,7 @@ import jsonpickle
 class SocketWrapper:
   def __init__(self, sock):
     self.sock = sock 
-    self.sock.setblocking(1)
+    self.sock.setblocking(0)
 
   #serialize the given key, data pair and send it 
   def sendData(self, key, data):
