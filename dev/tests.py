@@ -1,12 +1,12 @@
 #just testing how things look
-import blob_
+from blob import Blob
 import game
 import traceback
 
 def test1():
 	blob_list = []
 	for i in range(10):
-		new_blob = blob_.Blob("DEV", float(i)*1.23456, float(i)*3.52345, float(i+1)*10.0, (i*12.5,i*6.5,i*2.8))
+		new_blob = Blob("DEV", float(i)*1.23456, float(i)*3.52345, float(i+1)*10.0, (i*12,i*6,i*3))
 		blob_list.append(new_blob)
 	print blob_list
 	print "\n"

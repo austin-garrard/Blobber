@@ -1,75 +1,56 @@
+import socket, time, sys, traceback, select
 import pygame
-import blob
+from blob import Blob
 import traceback
+from util import SocketWrapper
 
 viewportSize = (800, 600)
 
 class BlobberClient:
-	def __init__(self, serverAddr="localhost", port=17098):
+	def __init__(self, myBlob, serverAddr="127.0.0.1", port=17098):
     #network
 		self.serverAddr = serverAddr
-    	self.port = port
-    	try:
-      		sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-      		sock.connect((serverAddr, port))
-      		self.connected = True
-      		self.sock = SocketWrapper(sock)
-    	except socket.error, e:
-      		print "Error connecting.\n"
-      		print e
-      		#self.sock.close()
-      		self.connected = False
-      		return
+		self.port = port
+		try:
+			sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
+			sock.connect((serverAddr, port))
+			self.connected = True
+			self.sock = SocketWrapper(sock)
+		except socket.error, e:
+			print "Error connecting.\n"
+			print e
+			#self.sock.close()
+			self.connected = False
+			return
 
-	    #game data
-	    self.MU = 100.0
-	    self.viewportSize = viewportSize
-	    self.blobs = []
+		#game data
+		self.MU = 100.0
+		self.viewportSize = viewportSize
+		self.blobs = []
 
-	    #init phase
-	    self.sock.sock.setblocking(1)
-	    try: 
-	      self.sock.sendMessage("init")
-	      
-	      initdone = False
-	      while not initdone:
-	        msg = self.sock.recvMessage()
-
-	        if msg == "initdone":
-	          break
-
-	        obj = jsonpickle.decode(msg)
-
-	        if obj[0] == "MU":
-	          self.MU = obj[1]
-
-	        elif obj[0] == "viewportSize":
-	          self.viewportSize = obj[1]
-
-	        elif obj[0] == "newBlob":
-	          self.blobs.append(obj[1])
-
-	        #end init phase
-	        elif obj[0] == "initdone":
-	          initdone = True
-	      
-	    except Exception:
-	      print "Error initializing."
-	      print(traceback.format_exc())   
-	      self.sock.close()
-	      self.connected = False
-	      return
-	    self.sock.sock.setblocking(0)
-
-	    self.myBlob = self.blobs[0]
-	    print self.myBlob.xy
-	    self.sock.sock.setblocking(0)
-
-	    #pygame
-	    pygame.init()
-	    self.screen = pygame.display.set_mode((self.viewportSize[0], self.viewportSize[1]))
+		#init phase
+		self.sock.sock.setblocking(1)
+		try: 
+			blob_str = game.blobToString(myBlob)
+			blob_msg = "newblob %s" % (blob_str)
+			self.sock.sendMessage(blob_msg)
 
 
+	
+		except Exception:
+			print "Error initializing."
+			print(traceback.format_exc())   
+			self.sock.close()
+			self.connected = False
+			return
+		self.sock.sock.setblocking(0)
+
+		self.myBlob = self.blobs[0]
+		print self.myBlob.xy
+		self.sock.sock.setblocking(0)
+
+
+###########################################
 def draw_all(blobs, screen):
 
 	for b in blobs:
@@ -81,7 +62,7 @@ def get_blobs(blobs):
 
 #should also initiate our blob to the server
 def start_blob():
-	new_blob = blob.Blob("DEV", 3.0, 3.0, 100, (125,0,125))
+	new_blob = Blob("DEV", 3.0, 3.0, 100, (125,0,125))
 	return new_blob
 
 def update_blobs(blobs):
@@ -122,7 +103,9 @@ def main():
 
 
 if __name__ == "__main__":
-	main()
+	#main()
+	client = BlobberClient(start_blob())
+	raw_input()
 
 
 
