@@ -1,72 +1,33 @@
-import random
 import math
-
-
-class Blob(object):
-
-	def __init__(self, xy=[40.0,20.0], radius = .2, color = (255,255,0)):
-
-		self.id 			= -1 # assigned when added to map
-		self.xy       = xy
-		self.radius   = radius
-		self.xAccel   = 0.0
-		self.yAccel   = 0.0
-		self.color    = color
-		self.aRate    = .001
-		self.maxAccel = .1551
-
-
-	def sign(self,number):return cmp(number,0)
-
-	def accelerateX(self, s):
-		if self.sign(s) != self.sign(self.xAccel):
-			self.xAccel = 0.0 + s*self.aRate
-		else:
-			if -1.0*self.maxAccel < self.xAccel < self.maxAccel:
-				self.xAccel += s*self.aRate
-
-	def accelerateY(self, s):
-		if self.sign(s) != self.sign(self.yAccel):
-			self.yAccel = 0.0 + s*self.aRate
-		else:
-			if -1.0*self.maxAccel < self.yAccel < self.maxAccel:
-				self.yAccel += s*self.aRate
-
-
-	def deccelX(self):
-		if int(self.xAccel*100) == 0: self.xAccel = 0.0
-		elif int(self.xAccel*100) > 0.0: self.xAccel -= .001
-		elif int(self.xAccel*100) < 0.0: self.xAccel += .001
-	def deccelY(self):
-		if int(self.yAccel*100) == 0: self.yAccel = 0.0
-		elif int(self.yAccel*100) > 0.0: self.yAccel -= .001
-		elif int(self.yAccel*100) < 0.0: self.yAccel += .001
+import time
 
 
 
-	def updatePos(self):
-		xy = list(self.xy)
-		xy[0] += self.xAccel
-		xy[1] += self.yAccel
-		return xy
+class Blob:
+
+	def __init__(self, name, x, y, radius, color, game_id=0, direction=[0.0,0.0], velocity=0.0, timestamp=time.time()):
+
+		self.name      = name
+		self.game_id   = game_id
+		self.x         = x
+		self.y         = y
+		self.radius    = radius
+		self.color     = color
+		self.direction = direction
+		self.velocity  = velocity
+		self.maxV      = math.log(self.radius ** 2)*100
+		self.accel     = self.maxV*0.1 * 10
+		self.timestamp = timestamp
 
 	def update(self):
-		self.mass = (self.radius**2)*math.pi
 
-	def getDistBetween(self, blob):
-		return math.sqrt((self.xy[0] - blob.xy[0])**2 + (self.xy[1] - blob.xy[1])**2)
+		t      = time.time() - self.timestamp
+		self.x += self.velocity*self.direction[0]*t + ((self.direction[0] * self.accel * (t ** 2)) / 2)
+		self.y += self.velocity*self.direction[1]*t + ((self.direction[1] * self.accel * (t ** 2)) / 2)
+		self.velocity  = min(self.velocity + self.accel*t, self.maxV)
+		self.timestamp = time.time()
+		#print self.x,self.y,self.velocity
 
-	def canEat(self, blob):
-		if self.radius*(0.9) > blob.radius:
-			ratio    = (1-(blob.radius**2)/(self.radius**2))
-			dist     = self.getDistBetween(blob)
-			if dist < ratio*self.radius:
-				return True
-			else:
-				return False
-		return False
-
-	def eat(self, blob):
-		self.radius = math.sqrt(self.radius**2 + blob.radius**2)
-
-			
+	def updateDirection(self, mouse_pos):
+		magnitude = math.sqrt((mouse_pos[0]-self.x) ** 2 + (mouse_pos[1] - self.y) ** 2)
+		self.direction = [(mouse_pos[0] - self.x)/(magnitude), (mouse_pos[1] - self.y)/(magnitude)]

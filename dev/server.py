@@ -1,6 +1,6 @@
 import jsonpickle
 import socket, time, threading, select
-from blob_ import Blob
+from blob import Blob
 from map import Map
 from util import StoppableThread, BBuffer, SocketWrapper
 import game
@@ -21,9 +21,9 @@ class BlobberServerThread(StoppableThread):
 		msg = self.sock.recvMessage().split(" ")
 	
 		if msg[0] == "newblob":
-	  		print "holy fuckin shit\n"
-	  	else:
-	  		print msg[0]
+			print "holy fuckin shit\n"
+		else:
+			print msg[0]
 
 		self.sock.close()
 		print "server thread stopping"
