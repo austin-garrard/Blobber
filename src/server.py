@@ -57,24 +57,27 @@ class GameThread(threading.Thread):
 		return True
 
 	def newBlob(self, game_id):
-		print "making new blob"
+		#print "making new blob"
 		newBlob = Blob("DEV",20.0*game_id,20.0*game_id,10,(56*game_id,0,126*game_id),game_id)
 		self.blobs[game_id] = newBlob
 		return newBlob
 
-	def updateBlob(self, id, mouse_pos):
-		self.blobs[id].updateDirection(mouse_pos)
+	def updateBlob(self, blob_id, mouse_pos):
+		self.blobs[blob_id].updateDirection(mouse_pos)
 
 	def parseMessage(self, message, id):
 		msg = message.split('|')
 
 		if msg[0] == 'init':
-			print "init message received"
+			#print "init message received"
 			newblob = self.newBlob(id)
 			msg = game.blobToString(newblob)
 			self.connections[id].send('init|%s' % game.blobToString(newblob))
+			self.connections[id].ready = True
+			self.connections[id].initialized = True
 
 		elif msg[0] == 'updateBlob':
+			print msg
 			self.updateBlob(int(msg[1]), make_tuple(msg[2]))
 
 		else:
@@ -82,20 +85,21 @@ class GameThread(threading.Thread):
 
 	def checkBlob(self, blob):
 		pass
-
+		
 	def run(self):
 		done = False
 		while not done:
 			if self.getReady() and len(self.blobs) != 0:
-				print "ready to start"
+				#print "ready to start"
 				for b in self.blobs:
 					blob = self.blobs[b]
 					blob.update()
 					self.checkBlob(blob)
 				updated_blobs = game.blobsToString(self.blobs)
 				for connection in self.connections:
-					print "trying to send to %s" % (connection)
-					self.connections[connection].send("updateBlobs|%s" % (game.blobsToString(self.blobs)))
+					#print "trying to send to %s" % (connection)
+					if self.connections[connection].initialized:
+						self.connections[connection].send("updateBlobs|%s" % (game.blobsToString(self.blobs)))
 
 
 
@@ -110,6 +114,7 @@ class ConnectionThread(threading.Thread):
 		self.timeout = 1
 		self.queue   = Queue.Queue()
 		self.ready   = True
+		self.initialized = False
 		self.sock.setblocking(1)
 
 	def send(self, msg):

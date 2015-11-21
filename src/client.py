@@ -77,13 +77,15 @@ class BlobberClient:
 		time.sleep(.1)
 		print "sending init"
 		self.send('init')
+		msg = self.receive()
+		self.parseMessage(msg)
 		try:
 			#initialize game-window stuff
 			pygame.init()
 
 			self.screen = pygame.display.set_mode(self.viewPortSize)
 
-			while not done:
+			while not done and self.init_done:
 				#drawing the game
 				for e in pygame.event.get():
 					if e.type == pygame.QUIT:
@@ -94,7 +96,8 @@ class BlobberClient:
 				self.parseMessage(msg)
 				self.screen.fill((255,255,255))
 				self.draw_all()
-				self.send("updateBlob|%d|%s" % (self.id, pygame.mouse.get_pos()))
+				mouse_pos = pygame.mouse.get_pos()
+				self.send("updateBlob|%d|%s" % (self.id, mouse_pos))
 
 				pygame.display.update()
 
