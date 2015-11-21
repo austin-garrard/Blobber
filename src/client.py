@@ -21,6 +21,7 @@ class BlobberClient:
 		#game stuff
 		self.myBlob = None
 		self.blobs  = {}
+		self.resources = []
 		self.screen = None
 		self.MU     = 100.0
 		self.viewPortSize = (800,600)
@@ -53,9 +54,19 @@ class BlobberClient:
 		#	self.sync_blobs(game.blobsFromString(msg[1]))
 
 		if msg[0] == 'init':
-			self.myBlob = game.blobFromString(msg[1])
+			initMsg = msg[1].split('#')
+
+			# init my blob
+			self.myBlob = game.blobFromString(initMsg[1])
 			self.id = self.myBlob.game_id
 			self.blobs[self.id] = self.myBlob
+
+			# init resources
+			resourcesStrings = initMsg[2]
+			for r in resourcesStrings.split(' '):
+				resouces.append(game.resourceFromString(r))
+
+
 			self.init_done = True
 			print "our blob is %s" % self.myBlob
 
@@ -70,6 +81,9 @@ class BlobberClient:
 		for blob in self.blobs:
 			b = self.blobs[blob]
 			pygame.draw.circle(self.screen, b.color, (int(b.x), int(b.y)), int(b.radius), 0)
+
+		for res in self.resources:
+			
 
 
 	def run(self):

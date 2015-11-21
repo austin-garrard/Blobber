@@ -4,6 +4,7 @@ import math
 import time
 import select
 import Queue
+from random import randint
 from blob import Blob
 import game
 import sys, traceback
@@ -50,6 +51,14 @@ class GameThread(threading.Thread):
 
 		self.blobs       = {}
 
+		self.mapWidth = 800
+		self.mapHeight = 600
+
+		self.maxResources= 20
+		self.resources 	 = []
+		for i in range(self.maxResources):
+			resources.append(game.makeResource(self.mapWidth, self.mapHeight))
+
 	def getReady(self):
 		for con in self.connections:
 			if not self.connections[con].ready:
@@ -71,8 +80,13 @@ class GameThread(threading.Thread):
 		if msg[0] == 'init':
 			#print "init message received"
 			newblob = self.newBlob(id)
-			msg = game.blobToString(newblob)
-			self.connections[id].send('init|%s' % game.blobToString(newblob))
+			blobString = game.blobToString(newblob)
+			resourceString = ""
+			for r in resources:
+				resourceString += game.resourceToString(r)
+				resourceString += " "
+			initString = 'init|%s#%s' % (blobString, resourceString)
+			self.connections[id].send(initString)
 			self.connections[id].ready = True
 			self.connections[id].initialized = True
 

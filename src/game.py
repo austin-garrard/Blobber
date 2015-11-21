@@ -5,15 +5,15 @@ from ast import literal_eval as make_tuple
 #converts a blob to a formatted string
 def blobToString(blob):
 	blob_str = "%s:%.3f:%.3f:%.3f:%s:%d:%.3f:%.3f:%.3f:%.3f;" % (blob.name,
-			                                  				blob.x,
-			                                  				blob.y,
-			                                  				blob.radius,
-						                                  	blob.color,
-						                                  	blob.game_id,
-						                                  	blob.direction[0],
-						                                  	blob.direction[1],
-						                                  	blob.velocity,
-						                                  	blob.timestamp )
+															blob.x,
+															blob.y,
+															blob.radius,
+															blob.color,
+															blob.game_id,
+															blob.direction[0],
+															blob.direction[1],
+															blob.velocity,
+															blob.timestamp )
 	return blob_str
 
 #converts a formatted blob string to a blob object.
@@ -65,7 +65,21 @@ def resourceToString(resource):
 
 def resourceFromString(res_str):
 	res_attr = res_str.split(":")
-	res_obj  = 1
+	return Resource(res_attr[0], res_attr[1])
 
 
 
+class Resource:
+	def __init__(self, x, y, radius=5, value=1):
+		self.x = x
+		self.y = y
+		self.color = (0,255,0)
+		self.radius = radius
+		self.value = value
+
+
+def makeResource(xBound, yBound):
+	return Resource(
+			randint(0, xBound), 
+			randint(0, yBound)
+		)
