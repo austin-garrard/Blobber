@@ -4,28 +4,32 @@ from ast import literal_eval as make_tuple
 
 #converts a blob to a formatted string
 def blobToString(blob):
-	blob_str = "%s:%.3f:%.3f:%.3f:%s:%.3f:%.3f:%.3f:%s;" % (blob.name,
+	blob_str = "%s:%.3f:%.3f:%.3f:%s:%d:%.3f:%.3f:%.3f:%.3f;" % (blob.name,
 			                                  				blob.x,
 			                                  				blob.y,
 			                                  				blob.radius,
 						                                  	blob.color,
+						                                  	blob.game_id,
 						                                  	blob.direction[0],
 						                                  	blob.direction[1],
 						                                  	blob.velocity,
 						                                  	time.time() )
+	print blob_str
 	return blob_str
 
 #converts a formatted blob string to a blob object.
 def blobFromString(blob_str):
+	blob_str  = blob_str[:-1]
 	blob_attr = blob_str.split(":")
 	blob_obj  = Blob(blob_attr[0],
 					float(blob_attr[1]),
 					float(blob_attr[2]), 
 					float(blob_attr[3]),
-					make_tuple(blob_attr[4]), 
-					[float(blob_attr[5]),float(blob_attr[6])], 
-					float(blob_attr[7]),
-					float(blob_attr[8]))
+					make_tuple(blob_attr[4]),
+					int(blob_attr[5]),
+					[float(blob_attr[6]),float(blob_attr[7])], 
+					float(blob_attr[8]),
+					float(blob_attr[9]))
 
 	return blob_obj
 
@@ -47,13 +51,13 @@ def blobsToString(blob_list):
 def blobsFromString(blob_strs):
 	#handles the case of no blobs to convert.
 	if blob_strs == "":
-		return []
+		return {}
 
-	blob_list = [] 	#the return list.
+	blob_list = {} 	#the return dict.
 	conv_list = blob_strs.split(";")[:-1] #breaks the large string into smaller blob strings.
 	for blob in conv_list:
 		blob_obj = blobFromString(blob)
-		blob_list.append(blob_obj)
+		blob_list[blob_obj.game_id] = blob_obj
 	return blob_list
 
 def resourceToString(resource):

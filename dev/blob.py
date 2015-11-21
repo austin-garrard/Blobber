@@ -5,7 +5,7 @@ import time
 
 class Blob:
 
-	def __init__(self, name, x, y, radius, color, game_id=0, direction=[0.0,0.0], velocity=0.0, timestamp=time.time()):
+	def __init__(self, name, x, y, radius, color, game_id, direction=[1.0,1.0], velocity=1.0, timestamp=time.time()):
 
 		self.name      = name
 		self.game_id   = game_id

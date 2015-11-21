@@ -4,6 +4,7 @@ import select
 from blob import Blob
 import game
 import sys, traceback
+import pygame
 
 class BlobberClient:
 
@@ -13,65 +14,103 @@ class BlobberClient:
 		self.timeout = 1
 		self.sock    = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.sock.connect((addr, port))
-		self.sock.setblocking(0)
+		self.sock.setblocking(1)
+		self.id      = 0
+		self.init_done = False
 
 		#game stuff
-		self.myBlob = Blob("DEV", 5.0, 5.0, 10.0, (255,0,126), 0, [1.0,1.0],1)
-		self.blobs  = [self.myBlob]
+		self.myBlob = None
+		self.blobs  = {}
+		self.screen = None
+		self.MU     = 100.0
+		self.viewPortSize = (800,600)
 
 	def send(self, msg):
 		messageSize = len(msg)
-		self.sock.send("%d %s" % (messageSize,msg))
+		self.sock.send("%d|%s" % (messageSize,msg))
 
 	def receive(self):
 		data = ''
 		nextByte = ''
-		while nextByte != ' ':
+		while nextByte != '|':
 			nextByte = self.sock.recv(1)
 			data += nextByte
-		messageSize = int(data)
+		messageSize = int(data[:-1])
 		message = self.sock.recv(messageSize)
 		return message
 
 	def interp_blobs(self):
 		for b in self.blobs:
-			b.update()
+			self.blobs[b].update()
 
-	def sync_blobs(self):
+	def sync_blobs(self, blobs):
 		self.blobs = blobs
 
 	def parseMessage(self, message):
-		msg = message.split(' ')
+		msg = message.split('|')
 
-		if msg[0] == 'syncBlobs':
-			self.sync_blobs(game.blobsFromString(msg[1]))
+		#if msg[0] == 'syncBlobs':
+		#	self.sync_blobs(game.blobsFromString(msg[1]))
+
+		if msg[0] == 'init':
+			self.myBlob = game.blobFromString(msg[1])
+			self.id = self.myBlob.game_id
+			self.blobs[self.id] = self.myBlob
+			self.init_done = True
+			print "our blob is %s" % self.myBlob
+
+		elif msg[0] == "updateBlobs":
+			self.blobs = game.blobsFromString(msg[1])
 
 		else:
 			print 'undefined message %s' % msg[0]
 
-	def draw(self):
+	def draw_all(self):
+
 		for blob in self.blobs:
-			if blob.game_id == 0:
-				print blob.x
+			b = self.blobs[blob]
+			pygame.draw.circle(self.screen, b.color, (int(b.x), int(b.y)), int(b.radius), 0)
+
 
 	def run(self):
 		done = False
 		time.sleep(.1)
-		self.send('newBlob %d %s' % (0, game.blobToString(self.myBlob)))
+		print "sending init"
+		self.send('init')
 		try:
+			#initialize game-window stuff
+			pygame.init()
+
+			self.screen = pygame.display.set_mode(self.viewPortSize)
+
 			while not done:
-				readReady, writeReady, exception = select.select([self.sock], [self.sock], [], self.timeout)
-				if len(readReady) != 0:
-					print "received a message"
-					msg = self.receive()
-					self.parseMessage(msg)
+				#drawing the game
+				for e in pygame.event.get():
+					if e.type == pygame.QUIT:
+						done = True
 
-				elif len(writeReady) != 0:
-					msg = "updateBlob 0 %s" % (game.blobToString(self.myBlob))
-					self.send(msg)
+					#self.interp_blobs()
+				msg = self.receive()
+				self.parseMessage(msg)
+				self.screen.fill((255,255,255))
+				self.draw_all()
+				self.send("updateBlob|%d|%s" % (self.id, pygame.mouse.get_pos()))
 
-				self.interp_blobs()
-				self.draw()
+				pygame.display.update()
+
+				#server message checks
+				#readReady, writeReady, exception = select.select([self.sock], [self.sock], [], self.timeout)
+				#if len(readReady) != 0:
+				#	print "received a message"
+				#	msg = self.receive()
+				#	print msg
+				#	self.parseMessage(msg)
+
+				#elif (len(writeReady) != 0) and self.init_done and (time.time()-sync_time) >= .1:
+				#	msg = "updateBlob|%s" % (game.blobToString(self.myBlob))
+				#	self.send(msg)
+
+
 		except:
 			print '\nUnhandled exception. Terminating.', sys.exc_info()[1]
 			print traceback.format_exc()
@@ -79,6 +118,6 @@ class BlobberClient:
 
 
 if __name__ == "__main__":
-	client = BlobberClient("localhost", 17098)
+	client = BlobberClient("192.168.1.103", 17098)
 	print "running client"
 	client.run()
