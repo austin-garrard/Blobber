@@ -1,5 +1,6 @@
 from blob import Blob
 import time
+from random import randint
 from ast import literal_eval as make_tuple
 
 #converts a blob to a formatted string
@@ -60,12 +61,13 @@ def blobsFromString(blob_strs):
 	return blob_list
 
 def resourceToString(resource):
-	res_str = "%.3f:%.3f;" % (resource.x, resource.y)
+	res_str = "%d:%d" % (resource.x, resource.y)
 	return res_str
 
 def resourceFromString(res_str):
 	res_attr = res_str.split(":")
-	return Resource(res_attr[0], res_attr[1])
+	for i in res_attr:
+	return Resource(int(res_attr[0]), int(res_attr[1])) if len(res_attr) is 2 else None
 
 
 

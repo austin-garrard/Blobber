@@ -54,21 +54,27 @@ class BlobberClient:
 		#	self.sync_blobs(game.blobsFromString(msg[1]))
 
 		if msg[0] == 'init':
+			print '!!!', msg[1]
 			initMsg = msg[1].split('#')
+			print '###', initMsg
 
 			# init my blob
-			self.myBlob = game.blobFromString(initMsg[1])
+			self.myBlob = game.blobFromString(initMsg[0])
 			self.id = self.myBlob.game_id
 			self.blobs[self.id] = self.myBlob
 
 			# init resources
-			resourcesStrings = initMsg[2]
+			resourcesStrings = initMsg[1]
 			for r in resourcesStrings.split(' '):
-				resouces.append(game.resourceFromString(r))
+				print '\t', r
+				tmp = game.resourceFromString(r)
+				if tmp is not None:
+					self.resources.append(tmp)
 
 
 			self.init_done = True
 			print "our blob is %s" % self.myBlob
+			#print self.resources
 
 		elif msg[0] == "updateBlobs":
 			self.blobs = game.blobsFromString(msg[1])
@@ -83,7 +89,7 @@ class BlobberClient:
 			pygame.draw.circle(self.screen, b.color, (int(b.x), int(b.y)), int(b.radius), 0)
 
 		for res in self.resources:
-			
+			pygame.draw.circle(self.screen, res.color, (res.x, res.y), res.radius, 0)
 
 
 	def run(self):
@@ -93,6 +99,8 @@ class BlobberClient:
 		self.send('init')
 		msg = self.receive()
 		self.parseMessage(msg)
+		#self.sock.close()
+		#return
 		try:
 			#initialize game-window stuff
 			pygame.init()
@@ -135,6 +143,6 @@ class BlobberClient:
 
 
 if __name__ == "__main__":
-	client = BlobberClient("192.168.1.103", 17098)
+	client = BlobberClient("localhost", 17098)
 	print "running client"
 	client.run()

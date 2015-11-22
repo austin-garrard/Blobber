@@ -4,7 +4,6 @@ import math
 import time
 import select
 import Queue
-from random import randint
 from blob import Blob
 import game
 import sys, traceback
@@ -18,7 +17,7 @@ class BlobberServer:
 		self.port = port
 		self.sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 		self.sock.setsockopt(socket.SOL_SOCKET, socket.SO_REUSEADDR, 1)
-		self.sock.bind(("192.168.1.103", self.port))
+		self.sock.bind(("", self.port))
 		self.id_iter = 1
 		self.game_thread = GameThread(self.connections)
 
@@ -57,7 +56,7 @@ class GameThread(threading.Thread):
 		self.maxResources= 20
 		self.resources 	 = []
 		for i in range(self.maxResources):
-			resources.append(game.makeResource(self.mapWidth, self.mapHeight))
+			self.resources.append(game.makeResource(self.mapWidth, self.mapHeight))
 
 	def getReady(self):
 		for con in self.connections:
@@ -82,7 +81,7 @@ class GameThread(threading.Thread):
 			newblob = self.newBlob(id)
 			blobString = game.blobToString(newblob)
 			resourceString = ""
-			for r in resources:
+			for r in self.resources:
 				resourceString += game.resourceToString(r)
 				resourceString += " "
 			initString = 'init|%s#%s' % (blobString, resourceString)
@@ -167,7 +166,6 @@ class ConnectionThread(threading.Thread):
 				#		print "sending a message: %s" % msg
 				#		self.send(msg)
 				#		sync_time = time.time()
-				
 		except:
 			print '\nUnhandled exception. Terminating.', sys.exc_info()[1]
 			print traceback.format_exc()
