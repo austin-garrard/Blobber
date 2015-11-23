@@ -65,6 +65,15 @@ class GameThread(threading.Thread):
 	def updateBlob(self, blob_id, mouse_pos):
 		self.blobs[blob_id].updateDirection(mouse_pos)
 
+
+	def updateBlobs(self):
+		for b in self.blobs:
+			if not self.blobs[b].alive:
+				del self.blobs[b]
+		for b in self.blobs:
+			self.blobs[b].update()
+
+
 	def parseMessage(self, message, id):
 		msg = message.split('|')
 
@@ -77,24 +86,35 @@ class GameThread(threading.Thread):
 			self.connections[id].initialized = True
 
 		elif msg[0] == 'updateBlob':
-			print msg
+			#print msg
 			self.updateBlob(int(msg[1]), make_tuple(msg[2]))
 
 		else:
 			print "Error with parsing connection message"
 
-	def checkBlob(self, blob):
-		pass
+	def checkBlobs(self):
+		blobs = self.blobs.items()
+		print blobs
+		while len(blobs) != 0:
+			check = blobs[0]
+			for blob in blobs[1:]:
+				print check
+				if check[1].canEat(blob[1]):
+					check.eat(blob[1])
+					blobs.remove(blob)
+				elif blob[1].canEat(check[1]):
+					blob[1].eat(check[1])
+					break
+			blobs = blobs[1:]
+
 		
 	def run(self):
 		done = False
 		while not done:
 			if self.getReady() and len(self.blobs) != 0:
 				#print "ready to start"
-				for b in self.blobs:
-					blob = self.blobs[b]
-					blob.update()
-					self.checkBlob(blob)
+				self.checkBlobs()
+				self.updateBlobs()
 				updated_blobs = game.blobsToString(self.blobs)
 				for connection in self.connections:
 					#print "trying to send to %s" % (connection)

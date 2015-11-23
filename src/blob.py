@@ -18,6 +18,7 @@ class Blob:
 		self.maxV      = math.log(self.radius ** 2)*100
 		self.accel     = self.maxV*0.1 * 10
 		self.timestamp = timestamp
+		self.alive     = True
 
 	def update(self):
 
@@ -31,3 +32,19 @@ class Blob:
 	def updateDirection(self, mouse_pos):
 		magnitude = math.sqrt((mouse_pos[0]-self.x) ** 2 + (mouse_pos[1] - self.y) ** 2)
 		self.direction = [(mouse_pos[0] - self.x)/(magnitude), (mouse_pos[1] - self.y)/(magnitude)]
+
+	def getDistBetween(self, blob):
+		return math.sqrt((self.x - blob.x)**2 + (self.y - blob.y)**2)
+
+	def canEat(self, blob):
+		if self.radius*(0.9) > blob.radius:
+			ratio    = (1-(blob.radius**2)/(self.radius**2))
+			dist     = self.getDistBetween(blob)
+			if dist < ratio*self.radius:
+				return True
+		return False
+
+	def eat(self, blob):
+		self.radius = math.sqrt(self.radius**2 + blob.radius**2)
+		blob.alive  = False
+
